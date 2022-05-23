@@ -1,22 +1,46 @@
 import { checkAuth, deleteBunny, getFamilies, logout } from '../fetch-utils.js';
-
+import { renderFamily } from '../render-utils.js';
 checkAuth();
 
-const familiesEl = document.querySelector('.families-container');
+//const familiesEl = document.querySelector('.families-container');
 const logoutButton = document.getElementById('logout');
 
 logoutButton.addEventListener('click', () => {
     logout();
 });
 
-function displayFamilies() {
+async function displayFamilies() {
     // fetch families from supabase
+    const div = document.querySelector('.families-container');
+    div.textContent = '';
+    const families = await getFamilies();
+    //console.log(families);
 
     // clear out the familiesEl
 
     for (let family of families) {
+        const familiesEl = renderFamily(family);
         // create three elements for each family, one for the whole family, one to hold the name, and one to hold the bunnies
         // your HTML Element should look like this:
+
+        const ul = document.createElement('ul');
+        for (let bunny of family.fuzzy_bunnies) {
+            console.log(bunny);
+            const li = document.createElement('li');
+            li.textContent = `${bunny.family_id}: ${bunny.name}`;
+            li.addEventListener('click', async () => {
+               // console.log('clicking bunny id: ', bunny.id);
+                await deleteBunny(bunny.id);
+                await displayFamilies();
+
+            });
+            ul.append(li);
+        }
+        familiesEl.append(ul);
+        div.append(familiesEl);
+    }
+}
+displayFamilies();
         // <div class="family">
         //    <h3>the Garcia family</h3>
         //    <div class="bunnies">
@@ -30,10 +54,9 @@ function displayFamilies() {
         //    make an element with the css class 'bunny', and put the bunny's name in the text content
         //    add an event listener to the bunny el. On click, delete the bunny, then refetch and redisplay all families.
         // append this bunnyEl to the bunniesEl
-    }
+    
+
 
     // append the bunniesEl and nameEl to the familyEl
 
     // append the familyEl to the familiesEl
-}
-displayFamilies();
